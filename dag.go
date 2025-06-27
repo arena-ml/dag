@@ -690,10 +690,10 @@ func (d *DAG) getDescendants(vHash interface{}) map[interface{}]struct{} {
 	if children, ok := d.outboundEdge[vHash]; ok {
 
 		// for each child use a goroutine to collect its descendants
-		//var waitGroup sync.WaitGroup
-		//waitGroup.Add(len(children))
+		// var waitGroup sync.WaitGroup
+		// waitGroup.Add(len(children))
 		for child := range children {
-			//go func(child interface{}, mu *sync.Mutex, cache map[interface{}]bool) {
+			// go func(child interface{}, mu *sync.Mutex, cache map[interface{}]bool) {
 			childDescendants := d.getDescendants(child)
 			mu.Lock()
 			for descendant := range childDescendants {
@@ -701,10 +701,10 @@ func (d *DAG) getDescendants(vHash interface{}) map[interface{}]struct{} {
 			}
 			cache[child] = struct{}{}
 			mu.Unlock()
-			//waitGroup.Done()
-			//}(child, &mu, cache)
+			// waitGroup.Done()
+			// }(child, &mu, cache)
 		}
-		//waitGroup.Wait()
+		// waitGroup.Wait()
 	}
 
 	// remember the collected descendents
@@ -943,8 +943,16 @@ func (d *DAG) DescendantsFlow(startID string, inputs []FlowResult, callback Flow
 			return []FlowResult{}, errPar
 		}
 
+		parentsInFlow := map[string]bool{}
+		for parentID, _ := range parents {
+			_, ok := flowIDs[parentID]
+			if ok || parentID == startID {
+				parentsInFlow[parentID] = true
+			}
+		}
+
 		// Create a buffered input channel that has capacity for all parent results.
-		inputChannels[id] = make(chan FlowResult, len(parents))
+		inputChannels[id] = make(chan FlowResult, len(parentsInFlow))
 
 		if d.isLeaf(id) {
 			leafCount += 1
